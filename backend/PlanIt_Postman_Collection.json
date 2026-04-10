@@ -1,0 +1,1135 @@
+{
+  "info": {
+    "name": "PlanIt Platform",
+    "description": "Complete API collection for the PlanIt Platform. Run requests in order — auth tokens and IDs are auto-saved as variables via test scripts.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "planit-platform-v1"
+  },
+  "variable": [
+    { "key": "base_url",      "value": "http://localhost:8080/api/v1",  "type": "string" },
+    { "key": "access_token",  "value": "",  "type": "string" },
+    { "key": "refresh_token", "value": "",  "type": "string" },
+    { "key": "user_id",       "value": "",  "type": "string" },
+    { "key": "vendor_id",     "value": "",  "type": "string" },
+    { "key": "product_id",    "value": "",  "type": "string" },
+    { "key": "booking_id",    "value": "",  "type": "string" },
+    { "key": "payment_id",    "value": "",  "type": "string" },
+    { "key": "review_id",     "value": "",  "type": "string" },
+    { "key": "otp_id",        "value": "",  "type": "string" },
+    { "key": "conversation_id","value": "conv-001", "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('access_token',  res.data.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.data.refreshToken);",
+                  "  pm.collectionVariables.set('user_id',       res.data.userId);",
+                  "  pm.test('Registration successful', () => pm.expect(res.success).to.be.true);",
+                  "  pm.test('Access token present',   () => pm.expect(res.data.accessToken).to.not.be.empty);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@eventrental.com\",\n  \"phone\": \"+919876543210\",\n  \"password\": \"SecurePass@123\",\n  \"role\": \"USER\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Register Vendor User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('vendor_access_token', res.data.accessToken);",
+                  "  pm.collectionVariables.set('vendor_user_id',      res.data.userId);",
+                  "  pm.test('Vendor registration successful', () => pm.expect(res.success).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vendor@eventrental.com\",\n  \"phone\": \"+919876543211\",\n  \"password\": \"SecurePass@123\",\n  \"role\": \"VENDOR\",\n  \"firstName\": \"Vendor\",\n  \"lastName\": \"Owner\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login (User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('access_token',  res.data.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.data.refreshToken);",
+                  "  pm.collectionVariables.set('user_id',       res.data.userId);",
+                  "  pm.test('Login successful', () => pm.expect(res.success).to.be.true);",
+                  "  pm.test('Role is USER',     () => pm.expect(res.data.user.role).to.eql('USER'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"testuser@eventrental.com\",\n  \"password\": \"SecurePass@123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login (Vendor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('vendor_access_token', res.data.accessToken);",
+                  "  pm.collectionVariables.set('vendor_user_id',      res.data.userId);",
+                  "  pm.test('Vendor login successful', () => pm.expect(res.success).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"vendor@eventrental.com\",\n  \"password\": \"SecurePass@123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('access_token', res.data.accessToken);",
+                  "  pm.test('Token refreshed', () => pm.expect(res.data.accessToken).to.not.be.empty);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/refresh-token", "host": ["{{base_url}}"], "path": ["auth", "refresh-token"] }
+          }
+        },
+        {
+          "name": "Send OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('otp_id', res.data.otpId);",
+                  "  pm.test('OTP ID received', () => pm.expect(res.data.otpId).to.not.be.empty);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+919876543210\",\n  \"purpose\": \"LOGIN\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/send-otp", "host": ["{{base_url}}"], "path": ["auth", "send-otp"] }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otpId\": \"{{otp_id}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/verify-otp", "host": ["{{base_url}}"], "path": ["auth", "verify-otp"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Logout successful', () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 Users",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('User data present', () => pm.expect(pm.response.json().data).to.not.be.null);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/users/me", "host": ["{{base_url}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"gender\": \"MALE\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/users/me/profile", "host": ["{{base_url}}"], "path": ["users", "me", "profile"] }
+          }
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"street\": \"123 Main Street\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"country\": \"India\",\n  \"postalCode\": \"400001\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/users/me/address", "host": ["{{base_url}}"], "path": ["users", "me", "address"] }
+          }
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"en\",\n  \"currency\": \"INR\",\n  \"notificationSettings\": {\n    \"email\": true,\n    \"sms\": true,\n    \"push\": true,\n    \"marketing\": false\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/users/me/preferences", "host": ["{{base_url}}"], "path": ["users", "me", "preferences"] }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["users", "{{user_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏪 Vendors",
+      "item": [
+        {
+          "name": "Register as Vendor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('vendor_id', res.data.id);",
+                  "  pm.test('Vendor ID saved', () => pm.expect(res.data.id).to.not.be.empty);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{vendor_access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"Royal Tent Rentals\",\n  \"businessType\": \"EQUIPMENT_RENTAL\",\n  \"description\": \"Premium tent and event equipment rental service in Mumbai\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/vendors/register", "host": ["{{base_url}}"], "path": ["vendors", "register"] }
+          }
+        },
+        {
+          "name": "Get Vendor By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/vendors/{{vendor_id}}", "host": ["{{base_url}}"], "path": ["vendors", "{{vendor_id}}"] }
+          }
+        },
+        {
+          "name": "Get My Vendor Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{vendor_access_token}}" }],
+            "url": { "raw": "{{base_url}}/vendors/me", "host": ["{{base_url}}"], "path": ["vendors", "me"] }
+          }
+        },
+        {
+          "name": "Update Vendor Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{vendor_access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"Royal Tent Rentals Pvt Ltd\",\n  \"description\": \"Mumbai's #1 premium tent rental company with 500+ events served\",\n  \"contactInfo\": {\n    \"email\": \"contact@royaltents.com\",\n    \"phone\": \"+919876543211\",\n    \"website\": \"https://royaltents.com\"\n  },\n  \"serviceAreas\": [\n    { \"city\": \"Mumbai\", \"state\": \"Maharashtra\", \"radius\": 50, \"deliveryCharge\": 500 },\n    { \"city\": \"Pune\",   \"state\": \"Maharashtra\", \"radius\": 30, \"deliveryCharge\": 800 }\n  ],\n  \"operatingHours\": {\n    \"monday\":    { \"open\": \"09:00\", \"close\": \"18:00\" },\n    \"tuesday\":   { \"open\": \"09:00\", \"close\": \"18:00\" },\n    \"wednesday\": { \"open\": \"09:00\", \"close\": \"18:00\" },\n    \"thursday\":  { \"open\": \"09:00\", \"close\": \"18:00\" },\n    \"friday\":    { \"open\": \"09:00\", \"close\": \"18:00\" },\n    \"saturday\":  { \"open\": \"10:00\", \"close\": \"16:00\" },\n    \"sunday\":    { \"closed\": true }\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/vendors/me", "host": ["{{base_url}}"], "path": ["vendors", "me"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📦 Products",
+      "item": [
+        {
+          "name": "Search Products (no filters)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "var res = pm.response.json();",
+                  "pm.test('Has pagination', () => pm.expect(res.pagination).to.not.be.undefined);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products?page=1&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page",     "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Products (with filters)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products?search=tent&category=TENTS&city=Mumbai&minPrice=10000&maxPrice=200000&rating=4&available=true&sortBy=rating&page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "search",    "value": "tent" },
+                { "key": "category",  "value": "TENTS" },
+                { "key": "city",      "value": "Mumbai" },
+                { "key": "minPrice",  "value": "10000" },
+                { "key": "maxPrice",  "value": "200000" },
+                { "key": "rating",    "value": "4" },
+                { "key": "available", "value": "true" },
+                { "key": "sortBy",    "value": "rating" },
+                { "key": "page",      "value": "1" },
+                { "key": "pageSize",  "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Product (Vendor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('product_id', res.data.id);",
+                  "  pm.test('Product ID saved', () => pm.expect(res.data.id).to.not.be.empty);",
+                  "  pm.test('Status is DRAFT',  () => pm.expect(res.data.status).to.eql('DRAFT'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{vendor_access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Wedding Tent 50x50 ft\",\n  \"category\": \"TENTS\",\n  \"subcategory\": \"WEDDING_TENTS\",\n  \"description\": \"Luxurious air-conditioned wedding tent perfect for 500 guests. Includes flooring, lighting, and AC units. Available with full setup and teardown service.\",\n  \"images\": [\n    {\n      \"url\": \"https://example.com/tent-1.jpg\",\n      \"order\": 0,\n      \"isPrimary\": true\n    }\n  ],\n  \"specifications\": {\n    \"capacity\": \"500 people\",\n    \"dimensions\": \"50x50 ft\",\n    \"material\": \"Waterproof canvas\",\n    \"features\": [\"Air-conditioned\", \"Lighting included\", \"Flooring\"]\n  },\n  \"pricingModel\": {\n    \"type\": \"DURATION_BASED\",\n    \"basePrice\": 3500000,\n    \"currency\": \"INR\",\n    \"tiers\": [\n      { \"duration\": \"HOURLY\",   \"price\": 500000, \"minHours\": 4 },\n      { \"duration\": \"HALF_DAY\", \"price\": 2000000 },\n      { \"duration\": \"FULL_DAY\", \"price\": 3500000 }\n    ],\n    \"securityDeposit\": 1000000,\n    \"advancePayment\": 50\n  },\n  \"inventory\": {\n    \"totalQuantity\": 5,\n    \"trackInventory\": true\n  },\n  \"tags\": [\"wedding\", \"tent\", \"luxury\", \"air-conditioned\", \"mumbai\"]\n}"
+            },
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "Get Product By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Product name present', () => pm.expect(pm.response.json().data.name).to.not.be.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Get Product By Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/products/slug/premium-wedding-tent-50x50-ft", "host": ["{{base_url}}"], "path": ["products", "slug", "premium-wedding-tent-50x50-ft"] }
+          }
+        },
+        {
+          "name": "Update Product (Vendor)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{vendor_access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Wedding Tent 50x50 ft - Updated\",\n  \"description\": \"Updated: Luxurious air-conditioned wedding tent perfect for up to 600 guests.\",\n  \"tags\": [\"wedding\", \"tent\", \"luxury\", \"air-conditioned\", \"600-guests\"]\n}"
+            },
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Product (Archive)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{vendor_access_token}}" }],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📅 Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('booking_id', res.data.id);",
+                  "  pm.test('Booking ID saved',   () => pm.expect(res.data.id).to.not.be.empty);",
+                  "  pm.test('Status is PENDING',  () => pm.expect(res.data.status).to.eql('PENDING'));",
+                  "  pm.test('Booking number set', () => pm.expect(res.data.bookingNumber).to.not.be.empty);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"startDate\": \"2026-06-15T06:00:00\",\n  \"endDate\": \"2026-06-16T02:00:00\",\n  \"quantity\": 1,\n  \"eventDetails\": {\n    \"eventName\": \"Wedding Reception - Arpit & Priya\",\n    \"eventType\": \"WEDDING\",\n    \"guestCount\": 500,\n    \"specialRequests\": \"Need early setup at 5 AM\"\n  },\n  \"location\": {\n    \"address\": \"Grand Banquet Hall, Bandra West, Mumbai\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"latitude\": 19.0600,\n    \"longitude\": 72.8300\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/bookings", "host": ["{{base_url}}"], "path": ["bookings"] }
+          }
+        },
+        {
+          "name": "Get My Bookings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has pagination', () => pm.expect(pm.response.json().pagination).to.not.be.undefined);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/bookings?page=1&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"],
+              "query": [
+                { "key": "page",     "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Bookings (Filtered by Status)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/bookings?status=PENDING&page=1&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"],
+              "query": [
+                { "key": "status",   "value": "PENDING" },
+                { "key": "page",     "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Vendor Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{vendor_access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/bookings/vendor?page=1&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "vendor"],
+              "query": [
+                { "key": "page",     "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Booking By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Booking number present', () => pm.expect(pm.response.json().data.bookingNumber).to.not.be.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/bookings/{{booking_id}}", "host": ["{{base_url}}"], "path": ["bookings", "{{booking_id}}"] }
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "pm.test('Booking cancelled', () => pm.expect(res.data.status).to.eql('CANCELLED'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Change of wedding venue\",\n  \"requestRefund\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/bookings/{{booking_id}}/cancel", "host": ["{{base_url}}"], "path": ["bookings", "{{booking_id}}", "cancel"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "💳 Payments",
+      "item": [
+        {
+          "name": "Create Payment Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('payment_id',  res.data.id);",
+                  "  pm.collectionVariables.set('gateway_order_id', res.data.gatewayResponse ? res.data.gatewayResponse.orderId : '');",
+                  "  pm.test('Payment order created', () => pm.expect(res.data.id).to.not.be.empty);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{booking_id}}\",\n  \"gateway\": \"RAZORPAY\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/payments/create-order", "host": ["{{base_url}}"], "path": ["payments", "create-order"] }
+          }
+        },
+        {
+          "name": "Verify Payment (Webhook Simulation)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"{{gateway_order_id}}\",\n  \"razorpay_payment_id\": \"pay_simulated123456\",\n  \"razorpay_signature\": \"simulated_signature_replace_with_real\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/payments/verify", "host": ["{{base_url}}"], "path": ["payments", "verify"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "⭐ Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('review_id', res.data.id);",
+                  "  pm.test('Review created', () => pm.expect(res.data.id).to.not.be.empty);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{booking_id}}\",\n  \"rating\": 5,\n  \"title\": \"Excellent service!\",\n  \"comment\": \"The tent was in perfect condition and the team was extremely professional. Would highly recommend!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/reviews", "host": ["{{base_url}}"], "path": ["reviews"] }
+          }
+        },
+        {
+          "name": "Get Product Reviews",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Reviews list returned', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reviews/product/{{product_id}}?page=1&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["reviews", "product", "{{product_id}}"],
+              "query": [
+                { "key": "page",     "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Vendor Respond to Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{vendor_access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Thank you so much for your kind words! We are thrilled that you had a wonderful experience. Looking forward to serving you again!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/reviews/{{review_id}}/vendor-response", "host": ["{{base_url}}"], "path": ["reviews", "{{review_id}}", "vendor-response"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "💬 Chat",
+      "item": [
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"{{vendor_user_id}}\",\n  \"conversationId\": \"{{conversation_id}}\",\n  \"bookingId\": \"{{booking_id}}\",\n  \"type\": \"TEXT\",\n  \"content\": \"Hi! I'd like to discuss the setup time for my wedding booking.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/chat/send", "host": ["{{base_url}}"], "path": ["chat", "send"] }
+          }
+        },
+        {
+          "name": "Get Conversation Messages",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Messages array returned', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/chat/conversations/{{conversation_id}}/messages?page=1&pageSize=50",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "conversations", "{{conversation_id}}", "messages"],
+              "query": [
+                { "key": "page",     "value": "1" },
+                { "key": "pageSize", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark Messages as Read",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/chat/conversations/{{conversation_id}}/read", "host": ["{{base_url}}"], "path": ["chat", "conversations", "{{conversation_id}}", "read"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🛡️ Admin",
+      "item": [
+        {
+          "name": "Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('admin_access_token', res.data.accessToken);",
+                  "  pm.test('Admin login successful', () => pm.expect(res.success).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin@eventrental.com\",\n  \"password\": \"AdminPass@123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200',       () => pm.response.to.have.status(200));",
+                  "pm.test('Users list returned', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/admin/users?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"],
+              "query": [
+                { "key": "page",     "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suspend User",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_access_token}}" }],
+            "url": { "raw": "{{base_url}}/admin/users/{{user_id}}/suspend", "host": ["{{base_url}}"], "path": ["admin", "users", "{{user_id}}", "suspend"] }
+          }
+        },
+        {
+          "name": "Activate User",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_access_token}}" }],
+            "url": { "raw": "{{base_url}}/admin/users/{{user_id}}/activate", "host": ["{{base_url}}"], "path": ["admin", "users", "{{user_id}}", "activate"] }
+          }
+        },
+        {
+          "name": "Get All Vendors",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/admin/vendors?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "vendors"],
+              "query": [
+                { "key": "page",     "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify Vendor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "pm.test('Vendor verified', () => pm.expect(res.data.status).to.eql('ACTIVE'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_access_token}}" }],
+            "url": { "raw": "{{base_url}}/admin/vendors/{{vendor_id}}/verify", "host": ["{{base_url}}"], "path": ["admin", "vendors", "{{vendor_id}}", "verify"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏥 Health Check",
+      "item": [
+        {
+          "name": "Actuator Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('App is UP', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/actuator/health", "host": ["{{base_url}}"], "path": ["actuator", "health"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "❌ Error & Edge Cases",
+      "item": [
+        {
+          "name": "Register - Duplicate Email (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Should fail with 400', () => pm.response.to.have.status(400));",
+                  "pm.test('success is false',    () => pm.expect(pm.response.json().success).to.be.false);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@eventrental.com\",\n  \"phone\": \"+919999999999\",\n  \"password\": \"SecurePass@123\",\n  \"role\": \"USER\",\n  \"firstName\": \"Duplicate\",\n  \"lastName\": \"User\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login - Wrong Password (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Should fail with 401', () => pm.response.to.have.status(401));",
+                  "pm.test('success is false',    () => pm.expect(pm.response.json().success).to.be.false);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"testuser@eventrental.com\",\n  \"password\": \"WrongPassword!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Product - Not Found (expect 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Should fail with 404', () => pm.response.to.have.status(404));",
+                  "pm.test('success is false',    () => pm.expect(pm.response.json().success).to.be.false);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/products/nonexistent-id-000", "host": ["{{base_url}}"], "path": ["products", "nonexistent-id-000"] }
+          }
+        },
+        {
+          "name": "Create Product - Unauthorized User (expect 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Should fail with 403', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Test\",\"category\":\"TENTS\",\"description\":\"Should fail\",\"pricingModel\":{\"type\":\"FIXED\",\"basePrice\":100}}"
+            },
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "Access Protected Route - No Token (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Should fail with 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/users/me", "host": ["{{base_url}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Invalid Booking Date (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Should fail with 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"startDate\": \"2020-01-01T06:00:00\",\n  \"endDate\": \"2020-01-02T02:00:00\",\n  \"quantity\": 1\n}"
+            },
+            "url": { "raw": "{{base_url}}/bookings", "host": ["{{base_url}}"], "path": ["bookings"] }
+          }
+        }
+      ]
+    }
+
+  ]
+}

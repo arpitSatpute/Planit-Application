@@ -1,0 +1,104 @@
+spring:
+  application:
+    name: planit-platform
+
+  # MongoDB + Redis Configuration (merged under single spring.data block)
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/planit}
+      database: planit
+      auto-index-creation: true
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 60000
+      jedis:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  # Servlet / Server
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+  compression:
+    enabled: true
+
+# Application-specific configuration
+app:
+  # JWT Configuration
+  jwt:
+    secret: ${JWT_SECRET:your-256-bit-secret-key-change-in-production-at-least-32chars}
+    expiration-ms: 86400000       # 24 hours
+    refresh-expiration-ms: 604800000  # 7 days
+
+  # File Upload
+  upload:
+    max-file-size: 10MB
+    allowed-extensions: jpg,jpeg,png,pdf
+    storage-type: LOCAL   # Options: LOCAL, S3
+
+  # AWS S3
+  aws:
+    s3:
+      bucket-name: ${S3_BUCKET_NAME:event-rental-uploads}
+      region: ${AWS_REGION:ap-south-1}
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+
+  # Payment Gateway
+  payment:
+    razorpay:
+      key-id: ${RAZORPAY_KEY_ID:rzp_test_placeholder}
+      key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
+      webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:placeholder_webhook}
+    stripe:
+      api-key: ${STRIPE_API_KEY:sk_test_placeholder}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET:placeholder_webhook}
+
+  # Notifications
+  notification:
+    twilio:
+      account-sid: ${TWILIO_ACCOUNT_SID:}
+      auth-token: ${TWILIO_AUTH_TOKEN:}
+      phone-number: ${TWILIO_PHONE_NUMBER:}
+    sendgrid:
+      api-key: ${SENDGRID_API_KEY:}
+      from-email: noreply@planit.com
+
+  # CORS
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:19006,http://localhost:3000}
+    allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.planit: DEBUG
+    org.springframework.security: WARN
+    org.springframework.data.mongodb: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
