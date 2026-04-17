@@ -1,9 +1,0 @@
-{
-  "name": "plannit-local",
-  "private": true,
-  "scripts": {
-    "dev:local": "node scripts/dev-local.mjs",
-    "verify:api": "powershell -ExecutionPolicy Bypass -File ./scripts/verify-api.ps1"
-  }
-}
-
