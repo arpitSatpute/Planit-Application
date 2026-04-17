@@ -10,8 +10,13 @@ export const HomeScreen = ({ navigation }: any) => {
   const user = useAuthStore(state => state.user);
   const { data: products, isPending } = useQuery({
     queryKey: ['products'],
-    queryFn: () => apiClient.get('/products').then(res => res.data.data || []),
+    queryFn: () => apiClient.get('/products').then(res => res.data?.data || []),
   });
+
+  const formatPrice = (value?: number) => {
+    if (!value) return 'TBD';
+    return `INR ${(value / 100).toLocaleString()}`;
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -46,7 +51,12 @@ export const HomeScreen = ({ navigation }: any) => {
                   key={item.id || index.toString()} 
                   style={styles.card} 
                   activeOpacity={0.9}
-                  onPress={() => navigation.navigate('ProductDetails', { title: item.name, price: `$${item.price || item.hourlyRate} / hr` })}
+                  onPress={() =>
+                    navigation.navigate('ProductDetails', {
+                      productId: item.id,
+                      title: item.name,
+                    })
+                  }
                 >
                   <View style={styles.cardImagePlaceholder}>
                     <Ionicons name="image-outline" size={40} color={theme.colors.border} />
@@ -54,7 +64,7 @@ export const HomeScreen = ({ navigation }: any) => {
                   <View style={styles.cardContent}>
                     <Text style={styles.cardTitle} numberOfLines={1}>{item.name}</Text>
                     <Text style={styles.cardSubtitle}>{item.location?.city || item.city || 'No Location'}</Text>
-                    <Text style={styles.cardPrice}>${item.price || item.hourlyRate || 'TBD'} / hr</Text>
+                    <Text style={styles.cardPrice}>{formatPrice(item.pricingModel?.basePrice)} / hr</Text>
                   </View>
                 </TouchableOpacity>
               ))

@@ -1,6 +1,7 @@
 package com.planit.controller;
 
 import com.planit.dto.response.ApiResponse;
+import com.planit.dto.response.ConversationSummaryResponse;
 import com.planit.dto.response.PagedResponse;
 import com.planit.model.ChatMessage;
 import com.planit.security.UserPrincipal;
@@ -15,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,6 +40,14 @@ public class ChatController {
                 body.get("content")
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(message));
+    }
+
+    /** REST endpoint to list conversations for current user */
+    @GetMapping("/conversations")
+    public ResponseEntity<ApiResponse<List<ConversationSummaryResponse>>> getConversations(
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        List<ConversationSummaryResponse> conversations = chatService.getConversations(currentUser.getId());
+        return ResponseEntity.ok(ApiResponse.success(conversations));
     }
 
     /** REST endpoint to get conversation messages */

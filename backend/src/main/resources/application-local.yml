@@ -1,0 +1,19 @@
+spring:
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+management:
+  health:
+    redis:
+      enabled: false
+
+app:
+  auth:
+    store:
+      fallback-enabled: true
+  seed:
+    enabled: true
+    force: ${APP_SEED_FORCE:false}
+

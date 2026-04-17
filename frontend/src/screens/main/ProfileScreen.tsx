@@ -1,17 +1,70 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { toast } from '../../utils/toast';
 import { Ionicons } from '@expo/vector-icons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../store/authStore';
+import apiClient from '../../api/client';
 
 export const ProfileScreen = () => {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+  const queryClient = useQueryClient();
+
+  const { data: profileData, refetch } = useQuery({
+    queryKey: ['my-profile'],
+    queryFn: () => apiClient.get('/users/me').then(res => res.data?.data),
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async () => {
+      const firstName = profileData?.profile?.firstName || user?.firstName || 'Demo';
+      const lastName = profileData?.profile?.lastName || user?.lastName || 'User';
+      return apiClient.put('/users/me/profile', {
+        firstName,
+        lastName,
+        avatar: profileData?.profile?.avatar || null,
+        gender: profileData?.profile?.gender || null,
+        dateOfBirth: profileData?.profile?.dateOfBirth || null,
+      });
+    },
+    onSuccess: async () => {
+      await refetch();
+      queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+      toast.success('Profile synced', 'Your profile has been updated.');
+    },
+    onError: (error: any) => {
+      toast.error('Update failed', error?.response?.data?.message || 'Could not update profile right now.');
+    }
+  });
+
+  React.useEffect(() => {
+    if (!profileData) return;
+    if (!user) return;
+
+    const nextUser = {
+      ...user,
+      firstName: profileData?.profile?.firstName || user.firstName,
+      lastName: profileData?.profile?.lastName || user.lastName,
+      email: profileData?.email || user.email,
+      role: (profileData?.role || user.role) as any,
+    };
+    setUser(nextUser);
+  }, [profileData]);
 
   const handleLogout = () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Log Out", style: "destructive", onPress: () => logout() }
+    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          toast.info('Logged out', 'See you soon!');
+        },
+      },
     ]);
   };
 
@@ -39,10 +92,14 @@ export const ProfileScreen = () => {
           <View style={styles.avatarLarge}>
             <Ionicons name="person" size={40} color={theme.colors.textMuted} />
           </View>
-          <Text style={styles.profileName}>{user ? `${user.firstName} ${user.lastName}` : 'Guest'}</Text>
-          <Text style={styles.profileEmail}>{user?.email}</Text>
-          <TouchableOpacity style={styles.editProfileBtn}>
-            <Text style={styles.editProfileText}>Edit Profile</Text>
+          <Text style={styles.profileName}>
+            {profileData?.profile?.firstName || user?.firstName} {profileData?.profile?.lastName || user?.lastName}
+          </Text>
+          <Text style={styles.profileEmail}>{profileData?.email || user?.email}</Text>
+          <TouchableOpacity style={styles.editProfileBtn} onPress={() => updateProfileMutation.mutate()}>
+            <Text style={styles.editProfileText}>
+              {updateProfileMutation.isPending ? 'Updating...' : 'Update Profile'}
+            </Text>
           </TouchableOpacity>
         </View>
 

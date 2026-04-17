@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { theme } from '../../theme';
 import apiClient from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
+import { toast } from '../../utils/toast';
 
 export const RegisterScreen = ({ navigation }: any) => {
   const [firstName, setFirstName] = useState('');
@@ -18,26 +19,31 @@ export const RegisterScreen = ({ navigation }: any) => {
   const login = useAuthStore((state) => state.login);
 
   const handleRegister = async () => {
-    if (!firstName || !email || !password) {
-      Alert.alert('Validation Error', 'Please fill in all required fields.');
+    if (!firstName || !lastName || !email || !phone || !password) {
+      toast.error('Validation Error', 'Please fill in all required fields.');
+      return;
+    }
+
+    if (!/^\+[1-9]\d{1,14}$/.test(phone.trim())) {
+      toast.error('Invalid Phone', 'Phone must be in E.164 format, e.g. +919876543210');
       return;
     }
 
     setIsLoading(true);
     try {
-      // Backend mapping - use correct endpoints per the spec message.txt
-      const endpoint = role === 'VENDOR' ? '/vendors/register' : '/auth/register';
-
       const payload = {
-        firstName,
-        lastName,
-        email,
-        phone,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
         password,
         role
       };
 
-      const response = await apiClient.post(endpoint, payload);
+      console.log('[Register] POST /auth/register →', { ...payload, password: '***' });
+      const response = await apiClient.post('/auth/register', payload);
+      console.log('[Register] Response status:', response.status);
+      console.log('[Register] Response body:', JSON.stringify(response.data));
 
       // Backend wraps response in ApiResponse: { success, data, message }
       const data = response.data.data;
@@ -51,18 +57,25 @@ export const RegisterScreen = ({ navigation }: any) => {
             firstName: userSummary.firstName,
             lastName: userSummary.lastName,
             email: userSummary.email,
-            role: userSummary.role,
+            role: userSummary.role as any,
           },
           accessToken
         );
+        toast.success('Account created!', `Welcome aboard, ${userSummary.firstName} 🎉`);
       } else {
-        Alert.alert('Registered!', 'Account created. Please sign in.');
+        toast.success('Registered!', 'Account created. Please sign in.');
         navigation.navigate('Login');
       }
 
     } catch (error: any) {
-      console.log('Registration error:', error);
-      Alert.alert('Registration failed', error?.response?.data?.message || 'Error executing request.');
+      console.error('[Register] Error:', error?.response?.status, error?.response?.data ?? error?.message);
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        (error?.code === 'ECONNREFUSED' || error?.message?.includes('Network')
+          ? 'Cannot reach server. Is the backend running on port 8080?'
+          : 'Registration failed. Please try again.');
+      toast.error('Registration failed', msg);
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +121,9 @@ export const RegisterScreen = ({ navigation }: any) => {
               <Text style={styles.loginText}>Already have an account? </Text>
               <Button title="Log In" variant="text" onPress={() => navigation.navigate('Login')} />
             </View>
+            <View style={styles.debugContainer}>
+              <Text style={styles.debugText}>Backend: http://localhost:8085/api/v1</Text>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -133,4 +149,6 @@ const styles = StyleSheet.create({
   footer: { marginTop: 'auto' },
   loginContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: theme.spacing.md },
   loginText: { color: theme.colors.textMuted, fontSize: 14 },
+  debugContainer: { marginTop: theme.spacing.lg, alignItems: 'center', opacity: 0.5 },
+  debugText: { fontSize: 11, color: theme.colors.textMuted, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
 });

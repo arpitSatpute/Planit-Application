@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { theme } from '../../theme';
 import apiClient from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
+import { toast } from '../../utils/toast';
 
 export const LoginScreen = ({ navigation }: any) => {
   const [identifier, setIdentifier] = useState('');
@@ -16,17 +17,22 @@ export const LoginScreen = ({ navigation }: any) => {
 
   const handleLogin = async () => {
     if (!identifier.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter your email/phone and password');
+      toast.error('Missing fields', 'Please enter your email/phone and password.');
       return;
     }
 
     setIsLoading(true);
     try {
+      console.log('[Login] POST /auth/login →', { identifier: identifier.trim() });
+
       // Backend LoginRequest expects: { identifier, password }
       const response = await apiClient.post('/auth/login', {
         identifier: identifier.trim(),
         password,
       });
+
+      console.log('[Login] Response status:', response.status);
+      console.log('[Login] Response body:', JSON.stringify(response.data));
 
       // Backend wraps all responses in ApiResponse<T>: { success, data, message }
       const payload = response.data?.data;
@@ -44,16 +50,21 @@ export const LoginScreen = ({ navigation }: any) => {
           },
           accessToken
         );
+        toast.success('Welcome back!', `Hello, ${userSummary.firstName} 👋`);
         // AppNavigator detects token in store and auto-switches to MainFlow
       } else {
-        Alert.alert('Login failed', response.data?.message || 'Unexpected response. Please try again.');
+        console.warn('[Login] Unexpected payload:', payload);
+        toast.error('Login failed', response.data?.message || 'Unexpected response. Please try again.');
       }
     } catch (error: any) {
+      console.error('[Login] Error:', error?.response?.status, error?.response?.data ?? error?.message);
       const msg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
-        'Invalid credentials. Please check and try again.';
-      Alert.alert('Login failed', msg);
+        (error?.code === 'ECONNREFUSED' || error?.message?.includes('Network')
+          ? 'Cannot reach server. Is the backend running on port 8080?'
+          : 'Invalid credentials. Please check and try again.');
+      toast.error('Login failed', msg);
     } finally {
       setIsLoading(false);
     }
@@ -100,6 +111,10 @@ export const LoginScreen = ({ navigation }: any) => {
             <Button title="Sign up" variant="text" onPress={() => navigation.navigate('Register')} />
           </View>
         </View>
+
+        <View style={styles.debugContainer}>
+          <Text style={styles.debugText}>Backend: http://localhost:8085/api/v1</Text>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -115,4 +130,6 @@ const styles = StyleSheet.create({
   footer: { marginTop: theme.spacing.md },
   registerContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: theme.spacing.lg },
   registerText: { color: theme.colors.textMuted, fontSize: 14 },
+  debugContainer: { marginTop: theme.spacing.xl, alignItems: 'center', opacity: 0.5 },
+  debugText: { fontSize: 11, color: theme.colors.textMuted, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
 });

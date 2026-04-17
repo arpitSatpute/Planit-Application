@@ -1,11 +1,34 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { theme } from '../../theme';
 import { Button } from '../../components/Button';
+import apiClient from '../../api/client';
 
 export const ProductDetailsScreen = ({ route, navigation }: any) => {
-  const { title = "Grand Plaza Hall", price = "$200 / hr" } = route.params || {};
+  const { title = "Grand Plaza Hall", productId } = route.params || {};
+  const { data: product, isPending } = useQuery({
+    queryKey: ['product', productId],
+    queryFn: () => apiClient.get(`/products/${productId}`).then(res => res.data?.data),
+    enabled: Boolean(productId),
+  });
+
+  const displayTitle = product?.name || title;
+  const displayPrice = product?.pricingModel?.basePrice
+    ? `INR ${(product.pricingModel.basePrice / 100).toLocaleString()}`
+    : 'Price on request';
+  const location = product?.location?.city ? `${product.location.city}, ${product.location.state || ''}` : 'Location TBD';
+  const description = product?.description || 'This venue is available for bookings and event services.';
+  const tags = Array.isArray(product?.tags) && product.tags.length > 0 ? product.tags : ['Flexible', 'Well Maintained', 'Popular'];
+
+  if (isPending) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -27,12 +50,12 @@ export const ProductDetailsScreen = ({ route, navigation }: any) => {
 
         <View style={styles.content}>
           <View style={styles.headerRow}>
-            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.title}>{displayTitle}</Text>
           </View>
           
           <View style={styles.locationRow}>
             <Ionicons name="location" size={16} color={theme.colors.accent} />
-            <Text style={styles.locationText}>123 Broadway, New York, NY</Text>
+            <Text style={styles.locationText}>{location}</Text>
           </View>
 
           <View style={styles.divider} />
@@ -51,12 +74,12 @@ export const ProductDetailsScreen = ({ route, navigation }: any) => {
 
           <Text style={styles.sectionTitle}>About this venue</Text>
           <Text style={styles.description}>
-            The Grand Plaza Hall is an elegant, multi-purpose venue perfect for weddings, corporate events, and large gatherings. It features towering ceilings, crystal chandeliers, and a state-of-the-art sound system.
+            {description}
           </Text>
 
-          <Text style={styles.sectionTitle}>Amenities</Text>
+          <Text style={styles.sectionTitle}>Highlights</Text>
           <View style={styles.amenitiesGrid}>
-            {['Wifi', 'Kitchen', 'Parking', 'A/C', 'Projector', 'Security'].map(item => (
+            {tags.slice(0, 6).map((item: string) => (
               <View key={item} style={styles.amenityItem}>
                 <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
                 <Text style={styles.amenityText}>{item}</Text>
@@ -71,13 +94,13 @@ export const ProductDetailsScreen = ({ route, navigation }: any) => {
 
       <View style={styles.stickyFooter}>
         <View style={styles.priceContainer}>
-          <Text style={styles.price}>{price}</Text>
+          <Text style={styles.price}>{displayPrice}</Text>
           <Text style={styles.priceSubtitle}>per hour</Text>
         </View>
         <Button 
           title="Book Now"
           style={styles.bookBtn}
-          onPress={() => alert('Booking flow initiated')}
+          onPress={() => alert('Booking API flow can be launched from this product ID.')}
         />
       </View>
     </View>

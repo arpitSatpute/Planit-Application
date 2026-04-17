@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { toast } from '../../utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { useQuery } from '@tanstack/react-query';
@@ -19,6 +20,19 @@ export const BookingsScreen = () => {
     queryFn: () => apiClient.get(queryEndpoint).then(res => res.data.data || []),
   });
 
+  const cancelBooking = async (bookingId: string) => {
+    try {
+      await apiClient.patch(`/bookings/${bookingId}/cancel`, {
+        reason: 'Cancelled from local web app',
+        requestRefund: true,
+      });
+      toast.success('Booking cancelled', 'The booking was cancelled successfully.');
+      refetch();
+    } catch (error: any) {
+      toast.error('Cancel failed', error?.response?.data?.message || 'Could not cancel booking right now.');
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
       case 'CONFIRMED': return theme.colors.success;
@@ -30,35 +44,47 @@ export const BookingsScreen = () => {
     }
   };
 
-  const renderBookingCard = ({ item }: any) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{item.product?.name || item.title || 'Event Booking'}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status}</Text>
-        </View>
-      </View>
+  const renderBookingCard = ({ item }: any) => {
+    const startDate = item.schedule?.startDate ? new Date(item.schedule.startDate) : null;
+    const status = item.status || 'PENDING';
+    const amount = item.pricing?.totalAmount ? `INR ${(item.pricing.totalAmount / 100).toLocaleString()}` : 'N/A';
+    const canCancel = !isVendor && (status === 'PENDING' || status === 'CONFIRMED');
 
-      <View style={styles.cardDetails}>
-        <View style={styles.detailRow}>
-          <Ionicons name="calendar-outline" size={16} color={theme.colors.textMuted} />
-          {/* Format date gracefully or fallback */}
-          <Text style={styles.detailText}>{item.date || item.startDate || 'TBD'}</Text>
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>{item.eventDetails?.eventName || item.bookingNumber || 'Event Booking'}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(status) + '20' }]}>
+            <Text style={[styles.statusText, { color: getStatusColor(status) }]}>{status}</Text>
+          </View>
         </View>
-        <View style={styles.detailRow}>
-          <Ionicons name="time-outline" size={16} color={theme.colors.textMuted} />
-          <Text style={styles.detailText}>{item.time || 'TBD'}</Text>
-        </View>
-      </View>
 
-      <View style={styles.cardFooter}>
-        <Text style={styles.price}>{item.totalPrice ? `$${item.totalPrice}` : item.price || 'N/A'}</Text>
-        <TouchableOpacity style={styles.actionBtn}>
-          <Text style={styles.actionBtnText}>View Details</Text>
-        </TouchableOpacity>
+        <View style={styles.cardDetails}>
+          <View style={styles.detailRow}>
+            <Ionicons name="calendar-outline" size={16} color={theme.colors.textMuted} />
+            <Text style={styles.detailText}>{startDate ? startDate.toLocaleDateString() : 'TBD'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Ionicons name="time-outline" size={16} color={theme.colors.textMuted} />
+            <Text style={styles.detailText}>{startDate ? startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.cardFooter}>
+          <Text style={styles.price}>{amount}</Text>
+          {canCancel ? (
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => cancelBooking(item.id)}>
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.actionBtn}>
+              <Text style={styles.actionBtnText}>View Details</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   // Fallback to empty array safely
   const safeBookings = Array.isArray(bookings) ? bookings : [];
@@ -104,7 +130,7 @@ export const BookingsScreen = () => {
       ) : (
         <FlatList
           data={filteredBookings}
-          keyExtractor={(item) => item.id || Math.random().toString()}
+          keyExtractor={(item, index) => item.id || item.bookingNumber || index.toString()}
           renderItem={renderBookingCard}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
@@ -142,4 +168,6 @@ const styles = StyleSheet.create({
   price: { fontSize: 18, fontWeight: '700', color: theme.colors.primary },
   actionBtn: { backgroundColor: theme.colors.background, paddingHorizontal: 16, paddingVertical: 8, borderRadius: theme.border.radius.sm },
   actionBtnText: { color: theme.colors.primary, fontSize: 14, fontWeight: '600' },
+  cancelBtn: { backgroundColor: theme.colors.error + '10', paddingHorizontal: 16, paddingVertical: 8, borderRadius: theme.border.radius.sm, borderWidth: 1, borderColor: theme.colors.error + '40' },
+  cancelBtnText: { color: theme.colors.error, fontSize: 14, fontWeight: '600' },
 });

@@ -70,7 +70,7 @@ export const MessagesScreen = () => {
       ) : (
         <FlatList
           data={safeData}
-          keyExtractor={(item) => item.id || Math.random().toString()}
+          keyExtractor={(item, index) => item.id || item.conversationId || index.toString()}
           renderItem={renderChatItem}
           contentContainerStyle={styles.listContainer}
           ItemSeparatorComponent={() => <View style={styles.separator} />}

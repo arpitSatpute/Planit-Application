@@ -9,15 +9,15 @@ import com.planit.exception.ValidationException;
 import com.planit.model.User;
 import com.planit.repository.UserRepository;
 import com.planit.security.JwtTokenProvider;
+import com.planit.service.auth.AuthStateStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -27,10 +27,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final RedisTemplate<String, Object> redisTemplate;
-
-    private static final String OTP_PREFIX = "otp:";
-    private static final String BLACKLIST_PREFIX = "blacklist:";
+    private final AuthStateStore authStateStore;
 
     public AuthResponse register(RegisterRequest request) {
         // Check duplicate email/phone
@@ -105,12 +102,8 @@ public class AuthService {
         String otp = String.format("%06d", (int) (Math.random() * 1_000_000));
         String otpId = UUID.randomUUID().toString();
 
-        // Store in Redis with 5-minute TTL
-        String key = OTP_PREFIX + otpId;
-        redisTemplate.opsForHash().put(key, "otp", otp);
-        redisTemplate.opsForHash().put(key, "phone", phone);
-        redisTemplate.opsForHash().put(key, "purpose", purpose);
-        redisTemplate.expire(key, 5, TimeUnit.MINUTES);
+        // Store OTP with 5-minute TTL (Redis or local in-memory fallback)
+        authStateStore.saveOtp(otpId, new AuthStateStore.OtpData(otp, phone, purpose), Duration.ofMinutes(5));
 
         // In production: send via Twilio
         log.info("OTP {} generated for phone {} (purpose: {})", otp, phone, purpose);
@@ -119,14 +112,15 @@ public class AuthService {
     }
 
     public boolean verifyOtp(String otpId, String otp) {
-        String key = OTP_PREFIX + otpId;
-        String storedOtp = (String) redisTemplate.opsForHash().get(key, "otp");
-        if (storedOtp == null) {
+        AuthStateStore.OtpData stored = authStateStore.findOtp(otpId)
+                .orElse(null);
+
+        if (stored == null) {
             throw new ValidationException("OTP has expired or is invalid");
         }
-        boolean valid = storedOtp.equals(otp);
+        boolean valid = stored.otp().equals(otp);
         if (valid) {
-            redisTemplate.delete(key);
+            authStateStore.deleteOtp(otpId);
         }
         return valid;
     }
@@ -134,7 +128,9 @@ public class AuthService {
     public void logout(String token) {
         if (jwtTokenProvider.validateToken(token)) {
             long ttl = jwtTokenProvider.getExpirationFromToken(token).getTime() - System.currentTimeMillis();
-            redisTemplate.opsForValue().set(BLACKLIST_PREFIX + token, "1", ttl, TimeUnit.MILLISECONDS);
+            if (ttl > 0) {
+                authStateStore.blacklistToken(token, Duration.ofMillis(ttl));
+            }
         }
     }
 

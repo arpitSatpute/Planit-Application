@@ -15,5 +15,7 @@ public interface ChatMessageRepository extends MongoRepository<ChatMessage, Stri
 
     List<ChatMessage> findByReceiverIdAndReadFalse(String receiverId);
 
+    List<ChatMessage> findBySenderIdOrReceiverIdOrderByCreatedAtDesc(String senderId, String receiverId);
+
     long countByConversationIdAndReceiverIdAndReadFalse(String conversationId, String receiverId);
 }

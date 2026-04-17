@@ -1,19 +1,22 @@
 import Constants from 'expo-constants';
 
-// Get the API URL from app.json extra config
-// If not available, fallback to the development IP or production URL
+const normalizeUrl = (value: string): string => value.replace(/\/+$/, '');
+
 const getBaseUrl = (): string => {
-  if (Constants.expoConfig?.extra?.backendApi) {
-    return Constants.expoConfig.extra.backendApi;
-  }
-  
-  if (!__DEV__) {
-    // Production URL fallback
-    return 'https://api.yourplanitapp.com/api/v1'; 
+  const fromEnv = process.env.EXPO_PUBLIC_BACKEND_API;
+  if (fromEnv) {
+    return normalizeUrl(fromEnv);
   }
 
-  // General fallback
-  return 'http://192.168.1.5:8080/api/v1';
+  if (__DEV__) {
+    return 'http://localhost:8085/api/v1';
+  }
+
+  if (Constants.expoConfig?.extra?.backendApi) {
+    return normalizeUrl(Constants.expoConfig.extra.backendApi);
+  }
+
+  return 'https://api.yourplanitapp.com/api/v1';
 };
 
 export const API_BASE_URL = getBaseUrl();

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "vendor-1",
+    "userId": "user-2",
+    "businessName": "Skyline Events",
+    "businessType": "SERVICE_PROVIDER",
+    "description": "Premium event spaces and rentals for weddings and corporate events.",
+    "status": "ACTIVE",
+    "serviceAreas": [
+      {
+        "city": "Bengaluru",
+        "state": "Karnataka",
+        "radius": 35.0,
+        "deliveryCharge": 500.0
+      }
+    ]
+  }
+]
+
